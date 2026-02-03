@@ -20,6 +20,10 @@ export default function Home() {
   ];
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
 
+  // Infer type from static data or define locally
+  type MenuItem = typeof fullMenuPlan[0];
+  const [menus, setMenus] = useState<MenuItem[]>(fullMenuPlan);
+
   const calculateStatus = () => {
     const now = new Date();
     const day = now.getDay();
@@ -31,11 +35,11 @@ export default function Home() {
 
     const isRuhetag = day === 2 || day === 3;
 
-    // Find today's menu in the fullMenuPlan
+    // Find today's menu in the loaded menus
     const dateNum = now.getDate();
     const monthNum = now.getMonth() + 1;
     const dateSearch = `${dateNum}. ${monthNum}.`; // Format: "28. 1."
-    const todayMenu = fullMenuPlan.find(m => m.date.includes(dateSearch));
+    const todayMenu = menus.find(m => m.date.includes(dateSearch));
 
     if (isRuhetag) {
       setLunchMenu({ text: "Heute kein Mittagsmenü - Ruhetag", isClosed: true });
@@ -63,11 +67,28 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const response = await fetch('/api/menus');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.menus && Array.isArray(data.menus)) {
+            setMenus(data.menus);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch menus:', error);
+      }
+    };
+    fetchMenus();
+  }, []);
+
+  useEffect(() => {
     calculateStatus();
     const interval = setInterval(calculateStatus, 60000);
     const sliderInterval = setInterval(() => setCurrentHeroIdx((prev) => (prev + 1) % heroImages.length), 6000);
     return () => { clearInterval(interval); clearInterval(sliderInterval); };
-  }, []);
+  }, [menus]);
 
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: containerRef });

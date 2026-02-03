@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
-import { scrapeMenus } from '@/lib/scraper';
+import { revalidateTag } from 'next/cache';
+import { getMenus } from '@/lib/menu-service';
 
 export async function POST() {
     try {
-        const menus = await scrapeMenus();
+        revalidateTag('menus');
+        const menus = await getMenus();
+
         return NextResponse.json({
             success: true,
             count: menus.length,
@@ -19,10 +22,12 @@ export async function POST() {
     }
 }
 
-// GET can be used for automatic triggers or status checks
 export async function GET() {
+    // Valid for Cron Jobs
     try {
-        const menus = await scrapeMenus();
+        revalidateTag('menus');
+        const menus = await getMenus();
+
         return NextResponse.json({
             success: true,
             count: menus.length,

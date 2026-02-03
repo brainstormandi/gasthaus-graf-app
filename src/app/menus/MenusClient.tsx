@@ -10,31 +10,21 @@ export default function MenusClient() {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        const fetchAndSync = async () => {
-            const lastSync = localStorage.getItem('lastMenuSync');
-            const today = new Date().toDateString();
-
-            if (lastSync !== today) {
-                setIsLoading(true);
-                try {
-                    const response = await fetch('/api/sync-menus');
-                    if (response.ok) {
-                        const data = await response.json();
-                        // If the API returns the menus, update state
-                        if (data.menus) {
-                            setMenus(data.menus);
-                        }
+        const fetchMenus = async () => {
+            try {
+                const response = await fetch('/api/menus');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.menus && Array.isArray(data.menus)) {
+                        setMenus(data.menus);
                     }
-                } catch (error) {
-                    console.error('Auto-sync failed:', error);
-                } finally {
-                    localStorage.setItem('lastMenuSync', today);
-                    setIsLoading(false);
                 }
+            } catch (error) {
+                console.error('Failed to fetch menus:', error);
             }
         };
 
-        fetchAndSync();
+        fetchMenus();
     }, []);
 
     return (

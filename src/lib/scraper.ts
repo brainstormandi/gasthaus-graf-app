@@ -14,12 +14,14 @@ export interface MenuItem {
 
 export async function scrapeMenus(): Promise<MenuItem[]> {
     try {
-        const { data } = await axios.get(MENU_URL, {
+        const response = await fetch(MENU_URL, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+            },
+            next: { revalidate: 0 } // Always fetch fresh from source when scraping
         });
-        const $ = cheerio.load(data);
+        const html = await response.text();
+        const $ = cheerio.load(html);
 
         const menus: MenuItem[] = [];
         const seen = new Set<string>();
@@ -65,6 +67,19 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
                             }
                         }
 
+                        // Fallback logic if no splitter found but length is reasonable
+                        if (side === "" && dish.length > 50 && dish.includes(',')) {
+                            // Try to split by last comma
+                            const lastComma = dish.lastIndexOf(',');
+                            if (lastComma > 10) {
+                                const potentialDish = dish.substring(0, lastComma).trim();
+                                const potentialSide = dish.substring(lastComma + 1).trim();
+                                dish = potentialDish;
+                                side = potentialSide;
+                            }
+                        }
+
+
                         const menuKey = `${shortDay}-${dateNums}-${dish}`;
                         if (!seen.has(menuKey)) {
                             menus.push({
@@ -79,12 +94,17 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
             });
         });
 
-        if (menus.length > 0) {
-            const dir = path.dirname(DATA_PATH);
-            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-            fs.writeFileSync(DATA_PATH, JSON.stringify(menus, null, 2));
-            const tsContent = `export const fullMenuPlan = ${JSON.stringify(menus, null, 4)};\n`;
-            fs.writeFileSync(path.join(process.cwd(), 'src/data/menus.ts'), tsContent);
+        // Only write to file in development mode
+        if (process.env.NODE_ENV === 'development' && menus.length > 0) {
+            try {
+                const dir = path.dirname(DATA_PATH);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(DATA_PATH, JSON.stringify(menus, null, 2));
+                const tsContent = `export const fullMenuPlan = ${JSON.stringify(menus, null, 4)};\n`;
+                fs.writeFileSync(path.join(process.cwd(), 'src/data/menus.ts'), tsContent);
+            } catch (err) {
+                console.warn('Could not write local menu files:', err);
+            }
         }
 
         return menus;
