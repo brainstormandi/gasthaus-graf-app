@@ -134,9 +134,38 @@ export async function scrapeNews(): Promise<NewsItem[]> {
         const $ = cheerio.load(html);
 
         const news: NewsItem[] = [];
+        const seenIds = new Set<string>();
 
-        // Strategy: Look for specific content columns that likely contain news
-        // Based on typical WordPress WPBakery structure 'wpb_wrapper'
+        // 1. HERO SECTION: "Wir sind auf der Suche..." / "Gasthaus Graf" intro text
+        // Usually in a wpb_text_column that contains "Wir wünschen" or "Suche"
+        $('.wpb_text_column').each((_, elem) => {
+            const text = $(elem).text();
+            if (text.includes("Wir sind auf der Suche") || text.includes("Service – Mitarbeiter") || text.includes("Wir wünschen Ihnen viel Spaß")) {
+                // Determine a title
+                let title = "Aktuelles";
+                const $h1 = $(elem).find('h1');
+                if ($h1.length > 0) title = $h1.text().trim();
+                if (title === "Gasthaus Graf") title = "Allgemeines & Jobs"; // Rename for better context
+
+                // Extract cleaned text (remove title if present)
+                let excerpt = $(elem).text().replace("Gasthaus Graf", "").trim();
+                excerpt = excerpt.substring(0, 300) + (excerpt.length > 300 ? "..." : "");
+
+                const id = "hero-news-job";
+                if (!seenIds.has(id)) {
+                    news.push({
+                        id,
+                        title,
+                        date: "Wichtig",
+                        excerpt,
+                        image: "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp" // Default logo
+                    });
+                    seenIds.add(id);
+                }
+            }
+        });
+
+        // 2. FOOTER CARDS: H2 headings in wpb_wrapper
         $('.wpb_wrapper').each((_, wrapper) => {
             const $wrapper = $(wrapper);
             const $h2 = $wrapper.find('h2');
@@ -144,64 +173,66 @@ export async function scrapeNews(): Promise<NewsItem[]> {
             if ($h2.length > 0) {
                 const title = $h2.text().trim();
 
-                // Exclude static sections, outdated events, or non-news content
+                // Exclude truly irrelevant or static sections
+                // REMOVED "Landesausstellung" and "Steak" from this list as requested
                 const exclusionKeywords = [
-                    "Gasthaus Graf", "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
-                    "Suche", "Navigation", "Landesausstellung", "Weihnachten", "Silvester", "Wildwochen",
+                    "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
+                    "Suche", "Navigation", "Weihnachten", "Silvester", "Wildwochen",
                     "Urlaub", "Betriebsurlaub", "Ruhetag", "Speisekarte", "Mittagsmenü"
                 ];
 
+                // Skip if exact title is "Gasthaus Graf" (unless it wasn't caught above, but usually that's the main header)
+                if (title === "Gasthaus Graf") return;
+
                 if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
 
-                // Find content text - get all paragraphs after h2
+                // Find content text
                 let excerpt = "";
-                $wrapper.find('h2 ~ p, h2 + div p').each((_, p) => {
+                $wrapper.find('h2 ~ p, h2 + div p, .wpb_wrapper p').each((_, p) => {
                     const text = $(p).text().trim();
-                    if (text) excerpt += text + " ";
+                    // Avoid duplicating the title in the excerpt
+                    if (text && text !== title && !excerpt.includes(text.substring(0, 20))) {
+                        excerpt += text + " ";
+                    }
                 });
 
-                // Fallback: if no p tags found, try just getting text of wrapper but excluding h2
                 if (!excerpt) {
                     excerpt = $wrapper.text().replace(title, '').trim().substring(0, 200) + "...";
                 } else {
-                    excerpt = excerpt.trim();
+                    excerpt = excerpt.trim().substring(0, 300) + (excerpt.length > 300 ? "..." : "");
                 }
 
                 // Find image
-                // 1. Look inside the wrapper
                 let image = $wrapper.find('img').attr('src');
 
-                // 2. If not found, look in the parent column's previous sibling (common in layouts where image is on left/right of text)
-                // This is risky without seeing exact DOM. 
-                // Let's stick to generic placeholder if not found, or use a specific known mapping if titles match
+                // Fallback images
                 if (!image) {
-                    // Try to match specific known titles to images from previous static data to keep style
-                    if (title.includes("Steak") || title.includes("Fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
-                    else if (title.includes("Garten") || title.includes("Grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
-                    else if (title.includes("App")) image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
-                    else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp"; // Default
+                    if (title.toLowerCase().includes("steak") || title.toLowerCase().includes("fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
+                    else if (title.toLowerCase().includes("garten") || title.toLowerCase().includes("grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
+                    else if (title.toLowerCase().includes("landesausstellung")) image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp"; // Or placeholder
+                    else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
                 }
 
                 if (title && excerpt) {
-                    // Generate a consistent ID based on title
                     const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-                    // Avoid duplicates
-                    if (!news.find(n => n.id === id)) {
+                    if (!seenIds.has(id)) {
                         news.push({
                             id,
                             title,
-                            date: "Aktuell", // We don't have easy dates in the text usually, default to "Aktuell"
+                            date: "Aktuell",
                             excerpt,
                             image
                         });
+                        seenIds.add(id);
                     }
                 }
             }
         });
 
-        // Filter out empty or very short items
-        return news.filter(n => n.title.length > 2 && n.excerpt.length > 10);
+        // Dedup and sort? 
+        // Logic aims to put Hero first if pushed first.
+        return news;
 
     } catch (error) {
         console.error('News scraping error:', error);
