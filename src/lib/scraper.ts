@@ -5,6 +5,7 @@ import path from 'path';
 
 const MENU_URL = 'https://gasthausgraf.at/mittagsmenue-mittagessen-gasthaus-wirtshaus-graf-amstetten-mostsviertel/';
 const DATA_PATH = path.join(process.cwd(), 'src/data/menus.json');
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
 
 export interface MenuItem {
     date: string;
@@ -16,10 +17,10 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
     try {
         const response = await fetch(MENU_URL, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': USER_AGENT
             },
-            next: { revalidate: 0 } // Always fetch fresh from source when scraping
-        });
+            next: { revalidate: 0 }
+        } as any);
         const html = await response.text();
         const $ = cheerio.load(html);
 
@@ -115,7 +116,7 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
 }
 
 export interface NewsItem {
-    id: string; // Changed to string to generate unique IDs
+    id: string;
     title: string;
     date: string;
     excerpt: string;
@@ -123,31 +124,23 @@ export interface NewsItem {
 }
 
 export async function scrapeNews(): Promise<NewsItem[]> {
+    const news: NewsItem[] = [];
+    const seenIds = new Set<string>();
+
+
+
+    // 1. HERO NEWS (from Homepage)
     try {
-        const response = await fetch('https://gasthausgraf.at/', {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            },
+        const res = await fetch('https://gasthausgraf.at/', {
+            headers: { 'User-Agent': USER_AGENT },
             next: { revalidate: 0 }
-        });
-        const html = await response.text();
+        } as any);
+        const html = await res.text();
         const $ = cheerio.load(html);
 
-        const news: NewsItem[] = [];
-        const seenIds = new Set<string>();
-
-        // 1. HERO SECTION: "Wir sind auf der Suche..." / "Gasthaus Graf" intro text
-        // Usually in a wpb_text_column that contains "Wir wünschen" or "Suche"
         $('.wpb_text_column').each((_, elem) => {
             let text = $(elem).text();
-            if (text.includes("Wir sind auf der Suche") || text.includes("Service – Mitarbeiter") || text.includes("Wir wünschen Ihnen viel Spaß")) {
-                // Determine a title
-                let title = "Job-Angebot";
-                const $h1 = $(elem).find('h1');
-                if ($h1.length > 0) title = $h1.text().trim();
-                if (title === "Gasthaus Graf") title = "Allgemeines & Jobs"; // Rename for better context
-
-                // Clean text: Remove everything before "Wir sind auf der Suche" if present
+            if (text.includes("Wir sind auf der Suche") || text.includes("Service – Mitarbeiter")) {
                 const searchPhrase = "Wir sind auf der Suche";
                 const index = text.indexOf(searchPhrase);
                 if (index !== -1) {
@@ -157,136 +150,95 @@ export async function scrapeNews(): Promise<NewsItem[]> {
                 }
 
                 let excerpt = text.trim();
-                excerpt = excerpt.substring(0, 400) + (excerpt.length > 400 ? "..." : "");
+                excerpt = excerpt.substring(0, 400);
 
-                // Try to find a related image nearby (e.g. in the same row)
                 let image = "";
                 const $row = $(elem).closest('.vc_row, .row');
                 if ($row.length > 0) {
                     const img = $row.find('img');
                     if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
                 }
+                if (image && image.startsWith('/')) image = `https://gasthausgraf.at${image}`;
+                if (!image) image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
 
-                if (image && image.startsWith('/')) {
-                    image = `https://gasthausgraf.at${image}`;
-                } else if (!image) {
-                    image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
-                }
-
-                const id = "hero-news-job";
-                if (!seenIds.has(id)) {
+                if (!seenIds.has("hero-news-job")) {
                     news.push({
-                        id,
-                        title,
+                        id: "hero-news-job",
+                        title: "Job-Angebot",
                         date: "Wichtig",
                         excerpt,
                         image
                     });
-                    seenIds.add(id);
+                    seenIds.add("hero-news-job");
                 }
             }
         });
+    } catch (e) {
+        console.error("Hero scrape error:", e);
+    }
 
-        // 2. FOOTER CARDS: H2 headings in wpb_wrapper
+    // 2. EVENT NEWS (from Events Page)
+    try {
+        const res = await fetch('https://gasthausgraf.at/events/', {
+            headers: { 'User-Agent': USER_AGENT },
+            next: { revalidate: 0 }
+        } as any);
+        const html = await res.text();
+        const $ = cheerio.load(html);
+
         $('.wpb_wrapper').each((_, wrapper) => {
             const $wrapper = $(wrapper);
             const $h2s = $wrapper.find('h2');
 
-            // Iterate EACH H2 individually to prevent merging multiple items in one wrapper
             $h2s.each((_, h2) => {
                 const $h2 = $(h2);
                 const title = $h2.text().trim();
+                if (!title || title === "Events" || title === "Gasthaus Graf") return;
 
-                // Exclude truly irrelevant or static sections
-                const exclusionKeywords = [
-                    "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
-                    "Suche", "Navigation", "Weihnachten", "Silvester", "Wildwochen",
-                    "Urlaub", "Betriebsurlaub", "Ruhetag", "Speisekarte", "Mittagsmenü",
-                    "Sensalation", "Grillabend", "Baustelle", "Trotz Baustelle"
-                ];
-
-                // Skip if exact title is "Gasthaus Graf" (unless it wasn't caught above, but usually that's the main header)
-                if (title === "Gasthaus Graf") return;
-
-                if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
-
-                // Find content text and image: Siblings around THIS h2
                 let excerpt = "";
                 let image = "";
 
-                // 1. Check siblings BEFORE this H2 (until previous H2)
-                $h2.prevUntil('h2').each((_, prevElem) => {
-                    const $elem = $(prevElem);
+                // Get content around this H2
+                $h2.prevUntil('h2').each((_, el) => {
+                    const $el = $(el);
                     if (!image) {
-                        const img = $elem.find('img');
+                        const img = $el.find('img');
                         if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
-                        else if ($elem.is('img')) image = $elem.attr('src') || $elem.attr('data-src') || "";
+                        else if ($el.is('img')) image = $el.attr('src') || $el.attr('data-src') || "";
                     }
                 });
 
-                // 2. Check siblings AFTER this H2 (until next H2)
-                $h2.nextUntil('h2').each((_, nextElem) => {
-                    const $elem = $(nextElem);
-
-                    // Get Text
-                    const t = $elem.text().trim();
-                    if (t && t !== title && !excerpt.includes(t.substring(0, 15))) {
-                        excerpt += t + " ";
-                    }
-
-                    // Get Image (if not already found)
+                $h2.nextUntil('h2').each((_, el) => {
+                    const $el = $(el);
+                    const t = $el.text().trim();
+                    if (t && t !== title && !excerpt.includes(t.substring(0, 15))) excerpt += t + " ";
                     if (!image) {
-                        const img = $elem.find('img');
+                        const img = $el.find('img');
                         if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
-                        else if ($elem.is('img')) image = $elem.attr('src') || $elem.attr('data-src') || "";
+                        else if ($el.is('img')) image = $el.attr('src') || $el.attr('data-src') || "";
                     }
                 });
 
-                // Fallback if nextUntil didn't return good text (e.g. text is inside a div immediately after)
-                if (!excerpt || excerpt.length < 5) {
-                    const nextText = $h2.next().text().trim();
-                    if (nextText && nextText !== title) excerpt = nextText;
-                }
+                if (!excerpt) excerpt = $h2.next().text().trim();
+                excerpt = excerpt.trim().substring(0, 400);
+                if (excerpt.length < 10) return;
 
-                excerpt = excerpt.trim().substring(0, 300) + (excerpt.length > 300 ? "..." : "");
-                if (excerpt.length < 10) return; // Skip if no real content found
-
-                // Clean image URL
-                if (image && image.startsWith('/')) {
-                    image = `https://gasthausgraf.at${image}`;
-                }
-
-                // Fallback images based on title keywords only if really no image found
+                if (image && image.startsWith('/')) image = `https://gasthausgraf.at${image}`;
                 if (!image) {
                     if (title.toLowerCase().includes("steak") || title.toLowerCase().includes("fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
-                    else if (title.toLowerCase().includes("garten") || title.toLowerCase().includes("grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
-                    else if (title.toLowerCase().includes("landesausstellung")) image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
                     else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
                 }
 
-                if (title && excerpt) {
-                    const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
-
-                    if (!seenIds.has(id)) {
-                        news.push({
-                            id,
-                            title,
-                            date: "Aktuell",
-                            excerpt,
-                            image
-                        });
-                        seenIds.add(id);
-                    }
+                const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                if (!seenIds.has(id)) {
+                    news.push({ id, title, date: "Aktuell", excerpt, image });
+                    seenIds.add(id);
                 }
             });
         });
-
-        // Dedup and sort? 
-        // Logic aims to put Hero first if pushed first.
-        return news;
-
-    } catch (error) {
-        console.error('News scraping error:', error);
-        return [];
+    } catch (e) {
+        console.error("Events scrape error:", e);
     }
+
+    return news;
 }
