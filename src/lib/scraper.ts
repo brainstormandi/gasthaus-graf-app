@@ -139,17 +139,25 @@ export async function scrapeNews(): Promise<NewsItem[]> {
         // 1. HERO SECTION: "Wir sind auf der Suche..." / "Gasthaus Graf" intro text
         // Usually in a wpb_text_column that contains "Wir wünschen" or "Suche"
         $('.wpb_text_column').each((_, elem) => {
-            const text = $(elem).text();
+            let text = $(elem).text();
             if (text.includes("Wir sind auf der Suche") || text.includes("Service – Mitarbeiter") || text.includes("Wir wünschen Ihnen viel Spaß")) {
                 // Determine a title
-                let title = "Aktuelles";
+                let title = "Job-Angebot";
                 const $h1 = $(elem).find('h1');
                 if ($h1.length > 0) title = $h1.text().trim();
                 if (title === "Gasthaus Graf") title = "Allgemeines & Jobs"; // Rename for better context
 
-                // Extract cleaned text (remove title if present)
-                let excerpt = $(elem).text().replace("Gasthaus Graf", "").trim();
-                excerpt = excerpt.substring(0, 300) + (excerpt.length > 300 ? "..." : "");
+                // Clean text: Remove everything before "Wir sind auf der Suche" if present
+                const searchPhrase = "Wir sind auf der Suche";
+                const index = text.indexOf(searchPhrase);
+                if (index !== -1) {
+                    text = text.substring(index);
+                } else {
+                    text = text.replace("Gasthaus Graf", "").trim();
+                }
+
+                let excerpt = text.trim();
+                excerpt = excerpt.substring(0, 400) + (excerpt.length > 400 ? "..." : "");
 
                 const id = "hero-news-job";
                 if (!seenIds.has(id)) {
@@ -168,17 +176,19 @@ export async function scrapeNews(): Promise<NewsItem[]> {
         // 2. FOOTER CARDS: H2 headings in wpb_wrapper
         $('.wpb_wrapper').each((_, wrapper) => {
             const $wrapper = $(wrapper);
-            const $h2 = $wrapper.find('h2');
+            const $h2s = $wrapper.find('h2');
 
-            if ($h2.length > 0) {
+            // Iterate EACH H2 individually to prevent merging multiple items in one wrapper
+            $h2s.each((_, h2) => {
+                const $h2 = $(h2);
                 const title = $h2.text().trim();
 
                 // Exclude truly irrelevant or static sections
-                // REMOVED "Landesausstellung" and "Steak" from this list as requested
                 const exclusionKeywords = [
                     "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
                     "Suche", "Navigation", "Weihnachten", "Silvester", "Wildwochen",
-                    "Urlaub", "Betriebsurlaub", "Ruhetag", "Speisekarte", "Mittagsmenü"
+                    "Urlaub", "Betriebsurlaub", "Ruhetag", "Speisekarte", "Mittagsmenü",
+                    "Sensalation", "Grillabend", "Baustelle", "Trotz Baustelle"
                 ];
 
                 // Skip if exact title is "Gasthaus Graf" (unless it wasn't caught above, but usually that's the main header)
@@ -186,21 +196,26 @@ export async function scrapeNews(): Promise<NewsItem[]> {
 
                 if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
 
-                // Find content text
+                // Find content text: Siblings after THIS h2 until the next h2
                 let excerpt = "";
-                $wrapper.find('h2 ~ p, h2 + div p, .wpb_wrapper p').each((_, p) => {
-                    const text = $(p).text().trim();
-                    // Avoid duplicating the title in the excerpt
-                    if (text && text !== title && !excerpt.includes(text.substring(0, 20))) {
-                        excerpt += text + " ";
+                // Get all next siblings until the next h2
+                $h2.nextUntil('h2').each((_, nextElem) => {
+                    const t = $(nextElem).text().trim();
+                    // Avoid adding empty lines or the title itself
+                    if (t && t !== title && !excerpt.includes(t.substring(0, 15))) {
+                        excerpt += t + " ";
                     }
                 });
 
-                if (!excerpt) {
-                    excerpt = $wrapper.text().replace(title, '').trim().substring(0, 200) + "...";
-                } else {
-                    excerpt = excerpt.trim().substring(0, 300) + (excerpt.length > 300 ? "..." : "");
+                // Fallback if nextUntil didn't return good text (e.g. text is inside a div immediately after)
+                if (!excerpt || excerpt.length < 5) {
+                    const nextText = $h2.next().text().trim();
+                    if (nextText && nextText !== title) excerpt = nextText;
                 }
+
+                excerpt = excerpt.trim().substring(0, 300) + (excerpt.length > 300 ? "..." : "");
+                if (excerpt.length < 10) return; // Skip if no real content found
+
 
                 // Find image
                 let image = $wrapper.find('img').attr('src');
@@ -227,7 +242,7 @@ export async function scrapeNews(): Promise<NewsItem[]> {
                         seenIds.add(id);
                     }
                 }
-            }
+            });
         });
 
         // Dedup and sort? 
