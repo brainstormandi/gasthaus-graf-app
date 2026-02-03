@@ -4,7 +4,7 @@ import { getMenus } from '@/lib/menu-service';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST() {
+export async function POST(request: Request) {
     try {
         revalidateTag('menus');
         const menus = await getMenus();
@@ -24,7 +24,7 @@ export async function POST() {
     }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     // Valid for Cron Jobs
     try {
         revalidateTag('menus');
