@@ -249,7 +249,7 @@ export default function Home() {
               <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-[#8D0046]">
                 <MapPin size={24} />
               </div>
-              <p className="text-lg font-bold text-[#1a1a1a] font-serif italic">Besuchen Sie uns</p>
+              <p className="text-2xl font-bold text-[#1a1a1a] font-serif italic">Besuchen Sie uns</p>
               <p className="text-base text-zinc-600 font-medium leading-relaxed">Brücklerweg 1, 3300 Winklarn.<br />Parkplätze direkt vor dem Haus.</p>
             </div>
 
@@ -260,15 +260,15 @@ export default function Home() {
                   Anrufen
                 </div>
               </a>
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#8D0046] animate-pulse">Platz reservieren</p>
+              <p className="text-sm font-black uppercase tracking-widest text-[#8D0046] animate-pulse">Platz reservieren</p>
             </div>
 
             <div className="flex flex-col items-center md:items-end space-y-4">
               <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center text-[#8D0046]">
                 <Clock size={24} />
               </div>
-              <p className="text-lg font-bold text-[#1a1a1a] font-serif italic text-right">Öffnungszeiten</p>
-              <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest text-right leading-loose">
+              <p className="text-2xl font-bold text-[#1a1a1a] font-serif italic text-right">Öffnungszeiten</p>
+              <p className="text-base text-zinc-600 font-bold uppercase tracking-widest text-right leading-loose">
                 Mo, Do-Sa: 11:00–14:30 & 17:30+<br />
                 So & Feiertag: ab 09:00 Uhr
               </p>
@@ -281,10 +281,10 @@ export default function Home() {
           <div className="h-px w-20 bg-zinc-100 mx-auto" />
           <Coffee size={40} strokeWidth={1} className="mx-auto text-zinc-200" />
           <div className="space-y-4">
-            <p className="text-xs text-zinc-300 font-bold uppercase tracking-[0.6em] transition-all hover:tracking-[0.8em]">Gasthaus Graf</p>
-            <p className="text-[10px] text-zinc-200 font-medium">
+            <p className="text-base text-zinc-500 font-bold uppercase tracking-[0.6em] transition-all hover:tracking-[0.8em]">Gasthaus Graf</p>
+            <p className="text-sm text-zinc-500 font-medium">
               © 2026 • Gasthaus Graf • Umsetzung:{" "}
-              <Link href="https://ki-marketingagentur.jetzt/" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-400 transition-colors">
+              <Link href="https://ki-marketingagentur.jetzt/" target="_blank" rel="noopener noreferrer" className="hover:text-[#8D0046] transition-colors">
                 Brainstorm KI Werbeagentur
               </Link>
             </p>
