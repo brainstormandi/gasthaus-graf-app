@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { getMenus } from '@/lib/menu-service';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
     try {
         revalidateTag('menus');
