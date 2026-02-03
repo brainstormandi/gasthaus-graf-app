@@ -144,8 +144,14 @@ export async function scrapeNews(): Promise<NewsItem[]> {
             if ($h2.length > 0) {
                 const title = $h2.text().trim();
 
-                // Skip generic headers if any (can refine list)
-                if (title === "Gasthaus Graf" || title === "Kontakt") return;
+                // Exclude static sections, outdated events, or non-news content
+                const exclusionKeywords = [
+                    "Gasthaus Graf", "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
+                    "Suche", "Navigation", "Landesausstellung", "Weihnachten", "Silvester", "Wildwochen",
+                    "Urlaub", "Betriebsurlaub", "Ruhetag", "Speisekarte", "Mittagsmenü"
+                ];
+
+                if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
 
                 // Find content text - get all paragraphs after h2
                 let excerpt = "";
