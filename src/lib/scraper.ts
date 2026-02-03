@@ -196,14 +196,25 @@ export async function scrapeNews(): Promise<NewsItem[]> {
 
                 if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
 
-                // Find content text: Siblings after THIS h2 until the next h2
+                // Find content text and image: Siblings after THIS h2 until the next h2
                 let excerpt = "";
+                let image = "";
+
                 // Get all next siblings until the next h2
                 $h2.nextUntil('h2').each((_, nextElem) => {
-                    const t = $(nextElem).text().trim();
-                    // Avoid adding empty lines or the title itself
+                    const $elem = $(nextElem);
+
+                    // Get Text
+                    const t = $elem.text().trim();
                     if (t && t !== title && !excerpt.includes(t.substring(0, 15))) {
                         excerpt += t + " ";
+                    }
+
+                    // Get Image (if not already found for this section)
+                    if (!image) {
+                        const img = $elem.find('img');
+                        if (img.length > 0) image = img.attr('src') || "";
+                        else if ($elem.is('img')) image = $elem.attr('src') || "";
                     }
                 });
 
@@ -217,10 +228,7 @@ export async function scrapeNews(): Promise<NewsItem[]> {
                 if (excerpt.length < 10) return; // Skip if no real content found
 
 
-                // Find image
-                let image = $wrapper.find('img').attr('src');
-
-                // Fallback images
+                // Fallback images based on title keywords only if really no image found
                 if (!image) {
                     if (title.toLowerCase().includes("steak") || title.toLowerCase().includes("fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
                     else if (title.toLowerCase().includes("garten") || title.toLowerCase().includes("grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
