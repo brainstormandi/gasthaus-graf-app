@@ -154,7 +154,7 @@ export default function MehrPage() {
                                                 </div>
                                                 <div className="space-y-3">
                                                     <p className={`font-black text-2xl leading-[0.9] uppercase tracking-tighter ${isClosed ? 'text-zinc-300' : 'text-[#1a1a1a]'}`}>{item.label}</p>
-                                                    <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${isClosed ? 'text-zinc-200' : 'text-zinc-400'}`}>{item.sub}</p>
+                                                    <p className={`text-sm md:text-base font-bold uppercase tracking-[0.1em] ${isClosed ? 'text-zinc-200' : 'text-zinc-500'}`}>{item.sub}</p>
                                                 </div>
                                                 {href && (
                                                     <div className="h-0 group-hover/item:h-6 overflow-hidden transition-all duration-500 opacity-0 group-hover/item:opacity-100">
