@@ -4,8 +4,28 @@ import { motion } from "framer-motion";
 import { Newspaper, Bell, ArrowRight, Sparkles, Quote } from "lucide-react";
 import Image from "next/image";
 import { newsItems } from "@/data/news";
+import { useState, useEffect } from "react";
 
 export default function NewsClient() {
+    const [news, setNews] = useState<any[]>(newsItems);
+
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const response = await fetch('/api/news');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.news && Array.isArray(data.news)) {
+                        setNews(data.news);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch news:', error);
+            }
+        };
+        fetchNews();
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#fdfcfb] pt-24 pb-48 px-6 font-sans overflow-hidden">
 
@@ -38,7 +58,7 @@ export default function NewsClient() {
             </header>
 
             <div className="max-w-7xl mx-auto space-y-64">
-                {newsItems.map((item, index) => (
+                {news.map((item, index) => (
                     <motion.article
                         initial={{ opacity: 0, y: 50 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -67,8 +87,12 @@ export default function NewsClient() {
                                     className="bg-white p-8 md:p-12 btn-rounded shadow-xl flex items-center gap-6"
                                 >
                                     <div className="text-center border-r border-zinc-100 pr-6">
-                                        <p className="text-sm font-black text-[#8D0046]">{item.date.split('.')[0]}</p>
-                                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{item.date.split('.')[1]}</p>
+                                        <p className="text-sm font-black text-[#8D0046]">
+                                            {item.date.includes('.') ? item.date.split('.')[0] : "Info"}
+                                        </p>
+                                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                                            {item.date.includes('.') ? item.date.split('.')[1] : item.date}
+                                        </p>
                                     </div>
                                     <Sparkles size={20} className="text-[#f4e8e1]" />
                                 </motion.div>
@@ -83,6 +107,7 @@ export default function NewsClient() {
                             <p className="text-zinc-500 text-lg md:text-xl leading-relaxed font-medium max-w-lg italic font-serif">
                                 "{item.excerpt}"
                             </p>
+
 
                             <div className="pt-8">
                                 <a

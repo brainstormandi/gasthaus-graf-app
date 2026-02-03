@@ -113,3 +113,92 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
         throw error;
     }
 }
+
+export interface NewsItem {
+    id: string; // Changed to string to generate unique IDs
+    title: string;
+    date: string;
+    excerpt: string;
+    image: string;
+}
+
+export async function scrapeNews(): Promise<NewsItem[]> {
+    try {
+        const response = await fetch('https://gasthausgraf.at/', {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            },
+            next: { revalidate: 0 }
+        });
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        const news: NewsItem[] = [];
+
+        // Strategy: Look for specific content columns that likely contain news
+        // Based on typical WordPress WPBakery structure 'wpb_wrapper'
+        $('.wpb_wrapper').each((_, wrapper) => {
+            const $wrapper = $(wrapper);
+            const $h2 = $wrapper.find('h2');
+
+            if ($h2.length > 0) {
+                const title = $h2.text().trim();
+
+                // Skip generic headers if any (can refine list)
+                if (title === "Gasthaus Graf" || title === "Kontakt") return;
+
+                // Find content text - get all paragraphs after h2
+                let excerpt = "";
+                $wrapper.find('h2 ~ p, h2 + div p').each((_, p) => {
+                    const text = $(p).text().trim();
+                    if (text) excerpt += text + " ";
+                });
+
+                // Fallback: if no p tags found, try just getting text of wrapper but excluding h2
+                if (!excerpt) {
+                    excerpt = $wrapper.text().replace(title, '').trim().substring(0, 200) + "...";
+                } else {
+                    excerpt = excerpt.trim();
+                }
+
+                // Find image
+                // 1. Look inside the wrapper
+                let image = $wrapper.find('img').attr('src');
+
+                // 2. If not found, look in the parent column's previous sibling (common in layouts where image is on left/right of text)
+                // This is risky without seeing exact DOM. 
+                // Let's stick to generic placeholder if not found, or use a specific known mapping if titles match
+                if (!image) {
+                    // Try to match specific known titles to images from previous static data to keep style
+                    if (title.includes("Steak") || title.includes("Fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
+                    else if (title.includes("Garten") || title.includes("Grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
+                    else if (title.includes("App")) image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
+                    else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp"; // Default
+                }
+
+                if (title && excerpt) {
+                    // Generate a consistent ID based on title
+                    const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
+                    // Avoid duplicates
+                    if (!news.find(n => n.id === id)) {
+                        news.push({
+                            id,
+                            title,
+                            date: "Aktuell", // We don't have easy dates in the text usually, default to "Aktuell"
+                            excerpt,
+                            image
+                        });
+                    }
+                }
+            }
+        });
+
+        // Filter out empty or very short items
+        return news.filter(n => n.title.length > 2 && n.excerpt.length > 10);
+
+    } catch (error) {
+        console.error('News scraping error:', error);
+        return [];
+    }
+}
