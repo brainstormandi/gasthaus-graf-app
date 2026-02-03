@@ -37,7 +37,7 @@ export async function scrapeMenus(): Promise<MenuItem[]> {
 
                 const dayMatch = days.find(day => trimmedLine.startsWith(day));
                 if (dayMatch) {
-                    const datePartMatch = trimmedLine.match(/^([A-Za-z]+, \d+\. \d+\.|\w+, \d+\.\d+\.)/);
+                    const datePartMatch = trimmedLine.match(/^([A-Za-z]+(?:,|\.)?\s*\d+\.\s*\d+\.?)/);
                     if (datePartMatch) {
                         const datePart = datePartMatch[0];
                         let rest = trimmedLine.replace(datePart, '').trim();
