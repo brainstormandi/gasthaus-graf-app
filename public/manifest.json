@@ -1,0 +1,16 @@
+{
+    "name": "Gasthaus Graf",
+    "short_name": "Graf App",
+    "description": "Die offizielle App des Gasthaus Graf in Winklarn",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#fdfcfb",
+    "theme_color": "#8D0046",
+    "icons": [
+        {
+            "src": "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp",
+            "sizes": "192x192 512x512",
+            "type": "image/webp"
+        }
+    ]
+}
