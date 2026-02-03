@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Antigravity / Agent files
+.agent/
+.tmp/
+directives/
+execution/
+AGENTS.md
+pwa-rebuild-plan.md
