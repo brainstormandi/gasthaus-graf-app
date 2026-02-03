@@ -177,67 +177,81 @@ export async function scrapeNews(): Promise<NewsItem[]> {
         console.error("Hero scrape error:", e);
     }
 
-    // 2. EVENT NEWS (from Events Page)
+    // 2. FETCH EVENTS PAGE FOR ACTUAL NEWS ITEMS
     try {
-        const res = await fetch('https://gasthausgraf.at/events/', {
-            headers: { 'User-Agent': USER_AGENT },
+        const eventsResponse = await fetch('https://gasthausgraf.at/events/', {
+            headers: {
+                'User-Agent': USER_AGENT
+            },
             next: { revalidate: 0 }
         } as any);
-        const html = await res.text();
-        const $ = cheerio.load(html);
+        const eventsHtml = await eventsResponse.text();
+        const $events = cheerio.load(eventsHtml);
 
-        $('.wpb_wrapper').each((_, wrapper) => {
-            const $wrapper = $(wrapper);
-            const $h2s = $wrapper.find('h2');
+        // Fetching H2s more globally on the events page
+        $events('h2').each((_, h2) => {
+            const $h2 = $events(h2);
+            let title = $h2.text().trim();
 
-            $h2s.each((_, h2) => {
-                const $h2 = $(h2);
-                const title = $h2.text().trim();
-                if (!title || title === "Events" || title === "Gasthaus Graf") return;
+            const exclusionKeywords = [
+                "Kontakt", "Öffnungszeiten", "Impressum", "Datenschutz", "Sitemap",
+                "Suche", "Navigation", "Speisekarte", "Mittagsmenü"
+            ];
+            if (!title || title === "Gasthaus Graf" || title === "Events") return;
+            if (exclusionKeywords.some(keyword => title.includes(keyword))) return;
 
-                let excerpt = "";
-                let image = "";
+            let excerpt = "";
+            let image = "";
 
-                // Get content around this H2
-                $h2.prevUntil('h2').each((_, el) => {
-                    const $el = $(el);
-                    if (!image) {
-                        const img = $el.find('img');
-                        if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
-                        else if ($el.is('img')) image = $el.attr('src') || $el.attr('data-src') || "";
-                    }
-                });
+            // 1. Try to find image in the same "post" container
+            const $post = $h2.closest('.post_content_holder, .post, article, .wpb_wrapper');
+            if ($post.length > 0) {
+                const img = $post.find('img');
+                if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
+            }
 
-                $h2.nextUntil('h2').each((_, el) => {
-                    const $el = $(el);
-                    const t = $el.text().trim();
-                    if (t && t !== title && !excerpt.includes(t.substring(0, 15))) excerpt += t + " ";
-                    if (!image) {
-                        const img = $el.find('img');
-                        if (img.length > 0) image = img.attr('src') || img.attr('data-src') || "";
-                        else if ($el.is('img')) image = $el.attr('src') || $el.attr('data-src') || "";
-                    }
-                });
-
-                if (!excerpt) excerpt = $h2.next().text().trim();
-                excerpt = excerpt.trim().substring(0, 400);
-                if (excerpt.length < 10) return;
-
-                if (image && image.startsWith('/')) image = `https://gasthausgraf.at${image}`;
-                if (!image) {
-                    if (title.toLowerCase().includes("steak") || title.toLowerCase().includes("fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
-                    else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
-                }
-
-                const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-');
-                if (!seenIds.has(id)) {
-                    news.push({ id, title, date: "Aktuell", excerpt, image });
-                    seenIds.add(id);
+            // 2. Find excerpt: Check siblings or parent's siblings
+            // Try siblings first
+            $h2.nextUntil('h2').each((_, nextElem) => {
+                const $elem = $events(nextElem);
+                const t = $elem.text().trim();
+                if (t && t !== title && t.length > 5 && !excerpt.includes(t.substring(0, 15))) {
+                    excerpt += t + " ";
                 }
             });
+
+            // If no excerpt yet, try to find text in the post container but outside h2
+            if (!excerpt || excerpt.length < 10) {
+                const postText = $post.text().replace(title, '').trim();
+                if (postText.length > 10) excerpt = postText;
+            }
+
+            excerpt = excerpt.trim().substring(0, 400);
+            if (excerpt.length < 10) return;
+
+            if (image && image.startsWith('/')) image = `https://gasthausgraf.at${image}`;
+            if (!image) {
+                if (title.toLowerCase().includes("steak") || title.toLowerCase().includes("fisch")) image = "/bilder/steak-fisch-gasthaus-amstetten-winklarn.webp";
+                else if (title.toLowerCase().includes("garten") || title.toLowerCase().includes("grill")) image = "/bilder/grillen-gasthaus-graf-essen-gastgarten-wirtshaus-restaurant-amstetten-mostviertel-11.webp";
+                else image = "/bilder/gasthaus-graf-winklarn-mostviertel-essen-regional-kulinarik-logo.webp";
+            }
+
+            // Standardize title/ID (handling entities if any)
+            const id = title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+            if (!seenIds.has(id)) {
+                news.push({
+                    id,
+                    title,
+                    date: "Aktuell",
+                    excerpt,
+                    image
+                });
+                seenIds.add(id);
+            }
         });
-    } catch (e) {
-        console.error("Events scrape error:", e);
+    } catch (err) {
+        console.error('Events scraping error:', err);
     }
 
     return news;
