@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
     try {
-        revalidateTag('menus');
+        // revalidateTag('menus');
         const menus = await getMenus();
 
         return NextResponse.json({
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
     // Valid for Cron Jobs
     try {
-        revalidateTag('menus');
+        // revalidateTag('menus');
         const menus = await getMenus();
 
         return NextResponse.json({

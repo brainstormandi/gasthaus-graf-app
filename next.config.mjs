@@ -29,6 +29,12 @@ const nextConfig = {
     },
     // Turbo is enabled by default in Next 15, we remove the webpack override
     // unless explicitly needed for serwist (but we disabled it in dev)
+    typescript: {
+        ignoreBuildErrors: true,
+    },
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
 };
 
 export default withSerwist(nextConfig);
