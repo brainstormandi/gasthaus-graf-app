@@ -290,8 +290,11 @@ export default function Home() {
               </div>
               <p className="text-2xl font-bold text-[#1a1a1a] font-serif italic text-right">Öffnungszeiten</p>
               <p className="text-base text-zinc-600 font-bold uppercase tracking-widest text-right leading-loose">
-                Mo, Do-Sa: 11:00–14:30 & 17:30+<br />
-                So & Feiertag: ab 09:00 Uhr
+                MO: 11 bis 14.30 Uhr<br />
+                DI, MI: Ruhetag<br />
+                DO, FR, SA: 11 bis 14.30 Uhr und ab 17.30 Uhr<br />
+                SO: ab 9.00 Uhr<br />
+                <span className="text-[#8D0046] normal-case tracking-normal block mt-1">Sonntag und Feiertag am Abend geschlossen!</span>
               </p>
             </div>
           </div>

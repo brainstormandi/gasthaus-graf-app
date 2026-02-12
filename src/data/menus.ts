@@ -68,10 +68,5 @@ export const fullMenuPlan = [
         "date": "FR, 27. 2.",
         "dish": "Betriebsurlaub",
         "side": "Geschlossen"
-    },
-    {
-        "date": "SA, 28.2.",
-        "dish": "geschlossen",
-        "side": ""
     }
 ];
