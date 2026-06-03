@@ -4,7 +4,9 @@ import fs from 'fs';
 import path from 'path';
 
 const MENU_URL = 'https://gasthausgraf.at/mittagsmenue-mittagessen-gasthaus-wirtshaus-graf-amstetten-mostsviertel/';
+const SPEISEN_URL = 'https://gasthausgraf.at/speisekarte-gasthaus-gastro-salat-wirtshaus-amstetten/';
 const DATA_PATH = path.join(process.cwd(), 'src/data/menus.json');
+const SPEISEN_DATA_PATH = path.join(process.cwd(), 'src/data/speisen.json');
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36';
 
 export interface MenuItem {
@@ -255,4 +257,204 @@ export async function scrapeNews(): Promise<NewsItem[]> {
     }
 
     return news;
+}
+
+export interface SpeisenItem {
+    name: string;
+    price: string;
+    desc: string;
+}
+
+export interface SpeisenCategory {
+    title: string;
+    items: SpeisenItem[];
+}
+
+export async function scrapeSpeisen(): Promise<SpeisenCategory[]> {
+    try {
+        const response = await fetch(SPEISEN_URL, {
+            headers: {
+                'User-Agent': USER_AGENT
+            },
+            next: { revalidate: 0 }
+        } as any);
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        const categoryMapping: Record<string, string> = {
+            'Zum Beginnen eine heiße Suppe': 'Heisse Suppen',
+            'Vorspeisen und Salate': 'Vorspeisen & Salate',
+            'Unsere Kinderseite': 'Für unsere Kleinen',
+            'Beliebte Klassiker aus der Wirtshausküche': 'Wirtshausklassiker',
+            'Aus der leichten Küche – ohne Fleisch': 'Vegetarisch & Fisch',
+            'Feines aus unserer Mehlspeisenküche': 'Mehlspeisen'
+        };
+
+        const iconMapping: Record<string, string> = {
+            'Heisse Suppen': 'Utensils',
+            'Vorspeisen & Salate': 'Leaf',
+            'Für unsere Kleinen': 'Baby',
+            'Wirtshausklassiker': 'ChefHat',
+            'Vegetarisch & Fisch': 'Leaf',
+            'Mehlspeisen': 'Cake'
+        };
+
+        const categories: SpeisenCategory[] = [];
+
+        function cleanText(text: string) {
+            return text
+                .replace(/&nbsp;/g, ' ')
+                .replace(/\u00a0/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        $('h3').each((_, h3Elem) => {
+            const h3Text = cleanText($(h3Elem).text());
+            const categoryTitle = categoryMapping[h3Text];
+            if (!categoryTitle) return;
+
+            const category: SpeisenCategory = {
+                title: categoryTitle,
+                items: []
+            };
+
+            let sibling = $(h3Elem).next();
+            const pElements: cheerio.Cheerio[] = [];
+
+            while (sibling.length > 0 && sibling[0].name !== 'h3') {
+                if (sibling[0].name === 'p') {
+                    pElements.push($(sibling));
+                } else {
+                    sibling.find('p').each((_, nestP) => {
+                        pElements.push($(nestP));
+                    });
+                }
+                sibling = sibling.next();
+            }
+
+            pElements.forEach($p => {
+                const pHTML = $p.html() || '';
+                const rawLines = pHTML.split(/<br\s*\/?>/gi);
+                const lines: string[] = [];
+
+                rawLines.forEach(line => {
+                    const txt = cleanText($('<span>' + line + '</span>').text());
+                    if (txt) {
+                        lines.push(txt);
+                    }
+                });
+
+                if (lines.length === 0) return;
+
+                const priceRegex = /(.*?)\s+(\d+,\d{2})\s*$/;
+                const priceLineIndices: number[] = [];
+                const parsedLines = lines.map((line, idx) => {
+                    const match = line.match(priceRegex);
+                    if (match) {
+                        priceLineIndices.push(idx);
+                        return { hasPrice: true, name: cleanText(match[1]), price: cleanText(match[2]) };
+                    }
+                    return { hasPrice: false, text: line };
+                });
+
+                if (priceLineIndices.length === 0) {
+                    return;
+                }
+
+                if (priceLineIndices.length === 1) {
+                    const pIdx = priceLineIndices[0];
+                    const priceItem = parsedLines[pIdx] as { hasPrice: true; name: string; price: string };
+
+                    const nameLines: string[] = [];
+                    for (let i = 0; i <= pIdx; i++) {
+                        if (i === pIdx) {
+                            nameLines.push(priceItem.name);
+                        } else {
+                            const pl = parsedLines[i];
+                            if (!pl.hasPrice) nameLines.push(pl.text);
+                        }
+                    }
+                    const name = nameLines.join(' ').replace(/\s+/g, ' ').trim();
+                    const price = priceItem.price;
+
+                    const descLines: string[] = [];
+                    for (let i = pIdx + 1; i < parsedLines.length; i++) {
+                        const pl = parsedLines[i];
+                        if (!pl.hasPrice) descLines.push(pl.text);
+                    }
+                    const desc = descLines.join(' ').replace(/\s+/g, ' ').trim();
+
+                    category.items.push({ name, price, desc });
+                } else {
+                    let currentItem: SpeisenItem | null = null;
+                    parsedLines.forEach(pl => {
+                        if (pl.hasPrice) {
+                            if (currentItem) {
+                                category.items.push(currentItem);
+                            }
+                            currentItem = {
+                                name: pl.name,
+                                price: pl.price,
+                                desc: ''
+                            };
+                        } else {
+                            if (currentItem) {
+                                currentItem.desc = currentItem.desc ? currentItem.desc + ' ' + pl.text : pl.text;
+                            }
+                        }
+                    });
+                    if (currentItem) {
+                        category.items.push(currentItem);
+                    }
+                }
+            });
+
+            // Dedup
+            const seen = new Set<string>();
+            category.items = category.items.filter(item => {
+                const key = `${item.name}-${item.price}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
+            categories.push(category);
+        });
+
+        // Write to local data files in development mode
+        if (process.env.NODE_ENV === 'development' && categories.length > 0) {
+            try {
+                const dir = path.dirname(SPEISEN_DATA_PATH);
+                if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+                fs.writeFileSync(SPEISEN_DATA_PATH, JSON.stringify(categories, null, 2));
+
+                const itemsWithIcons = categories.map(cat => ({
+                    title: cat.title,
+                    icon: iconMapping[cat.title] || 'Utensils',
+                    items: cat.items
+                }));
+
+                let tsContent = `import { ChefHat, Utensils, Leaf, Cake, Baby } from "lucide-react";\n\n`;
+                tsContent += `export const categories = [\n`;
+                itemsWithIcons.forEach(cat => {
+                    tsContent += `    {\n`;
+                    tsContent += `        title: ${JSON.stringify(cat.title)},\n`;
+                    tsContent += `        icon: ${cat.icon},\n`;
+                    tsContent += `        items: ${JSON.stringify(cat.items, null, 8)}\n`;
+                    tsContent += `    },\n`;
+                });
+                tsContent += `];\n`;
+
+                fs.writeFileSync(path.join(process.cwd(), 'src/data/speisen.ts'), tsContent);
+            } catch (err) {
+                console.warn('Could not write local speisen files:', err);
+            }
+        }
+
+        return categories;
+    } catch (error) {
+        console.error('Speisen scraping error:', error);
+        throw error;
+    }
 }

@@ -1,8 +1,18 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion, Variants } from "framer-motion";
-import { ChefHat, Info, Utensils, Leaf, Cake, ArrowRight, Sparkles } from "lucide-react";
-import { categories } from "@/data/speisen";
+import { ChefHat, Info, Utensils, Leaf, Cake, ArrowRight, Sparkles, Baby } from "lucide-react";
+import { categories as initialCategories } from "@/data/speisen";
+
+const iconMap: Record<string, any> = {
+    'Heisse Suppen': Utensils,
+    'Vorspeisen & Salate': Leaf,
+    'Für unsere Kleinen': Baby,
+    'Wirtshausklassiker': ChefHat,
+    'Vegetarisch & Fisch': Leaf,
+    'Mehlspeisen': Cake
+};
 
 const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -18,6 +28,26 @@ const itemVariants: Variants = {
 };
 
 export default function SpeisenClient() {
+    const [menuCategories, setMenuCategories] = useState(initialCategories);
+
+    useEffect(() => {
+        const fetchSpeisen = async () => {
+            try {
+                const response = await fetch('/api/speisen');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.speisen && Array.isArray(data.speisen)) {
+                        setMenuCategories(data.speisen);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch speisen:', error);
+            }
+        };
+
+        fetchSpeisen();
+    }, []);
+
     return (
         <div className="min-h-screen bg-[#fdfcfb] pt-24 pb-48 px-6 font-sans">
 
@@ -67,32 +97,34 @@ export default function SpeisenClient() {
                 viewport={{ once: true }}
                 className="max-w-7xl mx-auto space-y-56"
             >
-                {categories.map((cat, idx) => (
-                    <section key={cat.title} className="relative group">
-                        {/* Huge background text for rhythm */}
-                        <div className={`absolute -top-20 hidden md:block opacity-[0.02] text-[15rem] font-black font-serif italic select-none pointer-events-none transition-all duration-1000 group-hover:opacity-[0.05] ${idx % 2 === 0 ? '-right-20' : '-left-20'}`}>
-                            {cat.title}
-                        </div>
-
-                        <div className={`flex flex-col md:grid md:grid-cols-12 gap-16 lg:gap-32 items-start ${idx % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
-                            {/* Sticky Info Block */}
-                            <div className={`w-full md:col-span-5 lg:col-span-4 p-8 md:p-12 lg:p-16 btn-rounded bg-white border border-zinc-100 shadow-2xl shadow-zinc-200/50 mb-12 md:mb-0 ${idx % 2 === 0 ? 'md:sticky md:top-32' : 'md:col-start-9 md:sticky md:top-32'}`}>
-                                <div className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center text-[#8D0046] mb-12 group-hover:scale-110 transition-transform duration-700">
-                                    <cat.icon size={36} strokeWidth={1} />
-                                </div>
-                                <h3 className="text-4xl md:text-5xl font-serif font-bold italic leading-tight text-[#1a1a1a] mb-8">{cat.title}</h3>
-                                <div className="h-[2px] w-12 bg-[#8D0046] rounded-full mb-8" />
-                                <p className="text-zinc-600 text-sm font-bold leading-relaxed uppercase tracking-widest">Die Essenz unserer Küche.</p>
+                {menuCategories.map((cat, idx) => {
+                    const IconComponent = typeof cat.icon === 'function' ? cat.icon : (iconMap[cat.title] || Utensils);
+                    return (
+                        <section key={cat.title} className="relative group">
+                            {/* Huge background text for rhythm */}
+                            <div className={`absolute -top-20 hidden md:block opacity-[0.02] text-[15rem] font-black font-serif italic select-none pointer-events-none transition-all duration-1000 group-hover:opacity-[0.05] ${idx % 2 === 0 ? '-right-20' : '-left-20'}`}>
+                                {cat.title}
                             </div>
 
-                            {/* Item List */}
-                            <div className={`w-full md:col-span-7 lg:col-span-7 space-y-16 pr-2 md:pr-0 ${idx % 2 === 0 ? 'md:col-start-6' : 'md:col-start-1 md:row-start-1'}`}>
-                                {cat.items.map((item) => (
-                                    <motion.div
-                                        variants={itemVariants}
-                                        key={item.name}
-                                        className="group/item relative flex flex-col gap-4"
-                                    >
+                            <div className={`flex flex-col md:grid md:grid-cols-12 gap-16 lg:gap-32 items-start ${idx % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
+                                {/* Sticky Info Block */}
+                                <div className={`w-full md:col-span-5 lg:col-span-4 p-8 md:p-12 lg:p-16 btn-rounded bg-white border border-zinc-100 shadow-2xl shadow-zinc-200/50 mb-12 md:mb-0 ${idx % 2 === 0 ? 'md:sticky md:top-32' : 'md:col-start-9 md:sticky md:top-32'}`}>
+                                    <div className="w-20 h-20 bg-accent rounded-3xl flex items-center justify-center text-[#8D0046] mb-12 group-hover:scale-110 transition-transform duration-700">
+                                        <IconComponent size={36} strokeWidth={1} />
+                                    </div>
+                                    <h3 className="text-4xl md:text-5xl font-serif font-bold italic leading-tight text-[#1a1a1a] mb-8">{cat.title}</h3>
+                                    <div className="h-[2px] w-12 bg-[#8D0046] rounded-full mb-8" />
+                                    <p className="text-zinc-600 text-sm font-bold leading-relaxed uppercase tracking-widest">Die Essenz unserer Küche.</p>
+                                </div>
+
+                                {/* Item List */}
+                                <div className={`w-full md:col-span-7 lg:col-span-7 space-y-16 pr-2 md:pr-0 ${idx % 2 === 0 ? 'md:col-start-6' : 'md:col-start-1 md:row-start-1'}`}>
+                                    {cat.items.map((item) => (
+                                        <motion.div
+                                            variants={itemVariants}
+                                            key={item.name}
+                                            className="group/item relative flex flex-col gap-4"
+                                        >
                                         <div className="flex flex-col md:flex-row md:justify-between md:items-baseline gap-4 md:gap-8 w-full max-w-[85vw] md:max-w-none">
                                             <h4 className="font-extrabold text-[#1a1a1a] text-2xl md:text-3xl leading-snug tracking-tighter uppercase group-hover/item:text-[#8D0046] transition-colors duration-500 whitespace-normal break-words w-full pr-2">{item.name}</h4>
                                             <div className="hidden md:block flex-1 border-b-[2px] border-dotted border-zinc-100 mx-4 opacity-50 group-hover/item:border-[#8D0046]/20 transition-colors" />
@@ -108,7 +140,8 @@ export default function SpeisenClient() {
                             </div>
                         </div>
                     </section>
-                ))}
+                );
+            })}
             </motion.div>
 
             {/* CLOSING: Harmonic Footer Card */}

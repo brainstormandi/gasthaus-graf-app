@@ -1,72 +1,67 @@
 export const fullMenuPlan = [
     {
-        "date": "DO, 29. 1.",
-        "dish": "Tortellini Tricolore",
-        "side": "mit Schinkenrahmsauce und Salat"
-    },
-    {
-        "date": "FR, 30. 1.",
-        "dish": "Gebackenes Seelachsfilet",
-        "side": "mit Reis, Sc. Tatare und Salat"
-    },
-    {
-        "date": "MO, 2. 2.",
-        "dish": "Energieferien",
-        "side": "Geschlossen"
-    },
-    {
-        "date": "DO, 5. 2.",
-        "dish": "Energieferien",
-        "side": "Geschlossen"
-    },
-    {
-        "date": "FR, 6. 2.",
-        "dish": "Energieferien",
-        "side": "Geschlossen"
-    },
-    {
-        "date": "MO, 9. 2.",
-        "dish": "Beef Burger",
-        "side": "mit Speck, BBQ Sauce, Blattsalat und Pommes frites"
-    },
-    {
-        "date": "DO, 12. 2.",
+        "date": "MO, 1. 6.",
         "dish": "Letschokotelettes",
         "side": "mit Reis und Salat"
     },
     {
-        "date": "FR, 13. 2.",
-        "dish": "Gebackener Karpfen",
-        "side": "mit Wedges, Sc. Tatare und Salat"
+        "date": "DO, 4. 6.",
+        "dish": "Fronleichnam",
+        "side": ""
     },
     {
-        "date": "MO, 16. 2.",
-        "dish": "Naturschnitzel",
-        "side": "mit Nudeln und Salat"
+        "date": "FR, 5. 6.",
+        "dish": "Zanderfilet vom Grill",
+        "side": "mit Petersilkartoffeln und Gemüse"
     },
     {
-        "date": "DO, 19. 2.",
-        "dish": "Reisfleisch",
-        "side": "mit Salat"
+        "date": "MO, 8. 6.",
+        "dish": "Gebackene Fleischpalatschinken",
+        "side": "mit Rosmarin Wedges, Sc. Tatare und Salat"
     },
     {
-        "date": "FR, 20. 2.",
-        "dish": "Gefüllte Paprika",
-        "side": "mit Tomatensauce, Salzkartoffeln und Salat"
+        "date": "DO, 11. 6.",
+        "dish": "Gebratene Ente",
+        "side": "mit Rotkraut und Kartoffelknödel"
     },
     {
-        "date": "MO, 23. 2.",
-        "dish": "Betriebsurlaub",
-        "side": "Geschlossen"
+        "date": "FR, 12. 6.",
+        "dish": "Mostviertler Gröstl",
+        "side": "mit Spiegelei und Salat"
     },
     {
-        "date": "DO, 26. 2.",
-        "dish": "Betriebsurlaub",
-        "side": "Geschlossen"
+        "date": "MO, 15. 6.",
+        "dish": "Schnitzel",
+        "side": "mit Pommes frites und Salat"
     },
     {
-        "date": "FR, 27. 2.",
-        "dish": "Betriebsurlaub",
-        "side": "Geschlossen"
+        "date": "DO, 18. 6.",
+        "dish": "Tortellini Tricolore",
+        "side": "mit Schinkenrahm und Salat"
+    },
+    {
+        "date": "FR, 19. 6.",
+        "dish": "Gebackenes Dorschfilet",
+        "side": "mit Reis, Sc. Tatare und Salat"
+    },
+    {
+        "date": "MO, 22. 6.",
+        "dish": "Überbackenes „Kotlette Hawaii“",
+        "side": "mit Röstinchen und Gemüse"
+    },
+    {
+        "date": "DO, 25. 6.",
+        "dish": "Backhenderlsalat",
+        "side": "mit Kernöldressing, fein garniert"
+    },
+    {
+        "date": "FR, 26. 6.",
+        "dish": "Bunte Nudel – Fischpfanne",
+        "side": "mit Gemüse und Salat"
+    },
+    {
+        "date": "MO, 29. 6.",
+        "dish": "Gegrilltes Putenfilet",
+        "side": "mit Pommes frites, Gemüse und Kräuterbutter"
     }
 ];

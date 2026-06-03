@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidateTag } from 'next/cache';
-import { getMenus } from '@/lib/menu-service';
+import { getMenus, getSpeisen } from '@/lib/menu-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,18 +8,20 @@ export async function POST(request: Request) {
     try {
         // revalidateTag('menus');
         const menus = await getMenus();
+        const speisen = await getSpeisen();
 
         return NextResponse.json({
             success: true,
             count: menus.length,
             menus: menus,
+            speisen: speisen,
             lastUpdated: new Date().toISOString()
         });
     } catch (error) {
         console.error('Sync error:', error);
         return NextResponse.json({
             success: false,
-            error: 'Failed to sync menus'
+            error: 'Failed to sync menus and speisen'
         }, { status: 500 });
     }
 }
@@ -29,17 +31,19 @@ export async function GET(request: Request) {
     try {
         // revalidateTag('menus');
         const menus = await getMenus();
+        const speisen = await getSpeisen();
 
         return NextResponse.json({
             success: true,
             count: menus.length,
             menus: menus,
+            speisen: speisen,
             lastUpdated: new Date().toISOString()
         });
     } catch (error) {
         return NextResponse.json({
             success: false,
-            error: 'Failed to sync menus'
+            error: 'Failed to sync menus and speisen'
         }, { status: 500 });
     }
 }

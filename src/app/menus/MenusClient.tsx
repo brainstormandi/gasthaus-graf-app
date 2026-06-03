@@ -82,7 +82,7 @@ export default function MenusClient() {
                         <div className="pt-6 md:pt-8 border-t border-white/10 flex items-center justify-between">
                             <div className="flex items-center gap-2 md:gap-3">
                                 <Clock size={16} className="text-white/40" />
-                                <span className="text-xs md:text-xs font-bold uppercase tracking-widest opacity-90">Mo, Do-Sa | 11:00</span>
+                                <span className="text-xs md:text-xs font-bold uppercase tracking-widest opacity-90">Mo, Do, Fr | 11:00</span>
                             </div>
                             <Sparkles size={16} className="text-white/40" />
                         </div>

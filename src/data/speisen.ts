@@ -5,69 +5,216 @@ export const categories = [
         title: "Heisse Suppen",
         icon: Utensils,
         items: [
-            { name: "Kräftige Rindsuppe mit Fritatten und Schnittlauch", price: "4,50" },
-            { name: "Kräftige Rindsuppe mit hausgemachtem Leberknödel", price: "5,00" },
-            { name: "Mostschaumsuppe mit Zimtcroutons", price: "5,00" },
-            { name: "Herzhafte Kürbiscremesuppe mit Obershäubchen und Kernöl", price: "5,50" },
-        ]
+        {
+                "name": "Kräftige Rindsuppe mit Fritatten und Schnittlauch",
+                "price": "5,50",
+                "desc": ""
+        },
+        {
+                "name": "oder mit hausgemachtem Leberknödel",
+                "price": "5,50",
+                "desc": ""
+        },
+        {
+                "name": "Mostschaumsuppe mit Zimtcroutons",
+                "price": "6,00",
+                "desc": ""
+        },
+        {
+                "name": "Cremesuppe nach Saison mit Obershäubchen",
+                "price": "6,00",
+                "desc": ""
+        }
+]
     },
     {
         title: "Vorspeisen & Salate",
         icon: Leaf,
         items: [
-            { name: "Zarter Wildschwein Rohschinken", price: "12,50", desc: "aus der Toskana mit Waldorfsalat, Orangen – Mangochutney und frischem Toastbrot" },
-            { name: "Geräuchertes Forellenfilet", price: "9,50", desc: "auf Blattsalaten mit Krenobers und frischem Toastbrot" },
-            { name: "Mostviertler Schafkäse", price: "7,50", desc: "mit Tomate und Schnittlauch auf kleinem Salatbouquet" },
-            { name: "Backhenderlsalat", price: "13,00", desc: "oder gebratene Putenbruststreifen auf Blattsalaten" },
-            { name: "Backhenderlsalat auf gemischtem Salat", price: "14,00" },
-        ]
+        {
+                "name": "Geräuchertes Forellenfilet auf Blattsalaten mit Krenobers und frischem Toastbrot",
+                "price": "11,00",
+                "desc": ""
+        },
+        {
+                "name": "Knusprige Calamari Tapas",
+                "price": "12,00",
+                "desc": "mit Zitronenpfeffer und Trüffelmayonnaise"
+        },
+        {
+                "name": "Mostviertler Schafkäse mit Tomate und Schnittlauch auf kleinem Salatbouquet",
+                "price": "8,50",
+                "desc": ""
+        },
+        {
+                "name": "Backhenderlsalat oder gebratene Putenbruststreifen auf Blattsalaten",
+                "price": "14,50",
+                "desc": ""
+        },
+        {
+                "name": "oder auf gemischtem Salat",
+                "price": "15,50",
+                "desc": ""
+        }
+]
     },
     {
         title: "Für unsere Kleinen",
         icon: Baby,
         items: [
-            { name: "Kinderschnitzel", price: "7,50", desc: "vom Schweinerücken oder Putenbrust, dazu Pommes frites und Ketchup" },
-            { name: "6 Stück Chicken Nuggets", price: "7,00", desc: "serviert mit Pommes frites und Ketchup" },
-            { name: "Kleines Putensteak vom Grill", price: "8,50", desc: "mit Reis, buntem Gemüse und Ketchup" },
-            { name: "6 Stück Fischstäbchen", price: "7,00", desc: "mit Reis und Sauce Tatare" },
-            { name: "Bunte Nudeln", price: "6,00", desc: "mit Tomatensauce" },
-        ]
+        {
+                "name": "Kinderschnitzel vom Schweinerücken",
+                "price": "8,50",
+                "desc": ""
+        },
+        {
+                "name": "oder Putenbrust",
+                "price": "9,00",
+                "desc": "(dazu gibt’s natürlich Pommes frites und Ketchup)"
+        },
+        {
+                "name": "6 Stück Chicken Nuggets (serviert mit Pommes frites und Ketchup)",
+                "price": "8,00",
+                "desc": ""
+        },
+        {
+                "name": "Kleines Putensteak vom Grill mit Reis, buntem Gemüse und Ketchup",
+                "price": "10,00",
+                "desc": ""
+        },
+        {
+                "name": "6 Stück Fischstäbchen mit Reis und Sauce Tatare",
+                "price": "8,00",
+                "desc": ""
+        }
+]
     },
     {
         title: "Wirtshausklassiker",
         icon: ChefHat,
         items: [
-            { name: "Gemischter Grillteller", price: "17,50", desc: "dazu Pommes frites, buntes Gemüse und Kräuterbutter" },
-            { name: "Klassisches Putencordon bleu", price: "16,00", desc: "serviert mit Pommes frites und Preiselbeeren" },
-            { name: "Wiener Schnitzel", price: "14,00", desc: "vom Schweinerücken oder Putenbrust serviert mit Petersilienkartoffeln" },
-            { name: "Bauerncordon bleu", price: "17,50", desc: "vom Schweinerücken, gefüllt mit Speck, Zwiebel und Bergkäse, dazu hausgemachte Rosmarin Wedges und Preiselbeeren" },
-            { name: "„Holzhackersteak“", price: "26,50", desc: "Rumpsteak vom Jungstier mit Speck und Spiegelei, dazu hausgemachte Rosmarin Wedges, Gemüse und BBQ Dip" },
-            { name: "Winklarner Mostbraten", price: "17,00", desc: "mit Serviettenknödel und warmem Speckkrautsalat" },
-        ]
+        {
+                "name": "Gemischter Grillteller",
+                "price": "18,50",
+                "desc": "dazu Pommes frites, buntes Gemüse und Kräuterbutter"
+        },
+        {
+                "name": "Klassisches Putencordon bleu",
+                "price": "17,00",
+                "desc": "serviert mit Pommes frites und Preiselbeeren"
+        },
+        {
+                "name": "Wiener Schnitzel vom Schweinerücken",
+                "price": "14,00",
+                "desc": ""
+        },
+        {
+                "name": "oder Putenbrust",
+                "price": "15,00",
+                "desc": "serviert mit Petersilienkartoffeln"
+        },
+        {
+                "name": "Bauerncordon bleu",
+                "price": "18,50",
+                "desc": "vom Schweinerücken, gefüllt mit Speck, Zwiebel und Bergkäse, dazu hausgemachte Rosmarin Wedges und Preiselbeeren"
+        },
+        {
+                "name": "„Holzhackersteak“",
+                "price": "28,00",
+                "desc": "Rumpsteak vom Jungstier mit Speck und Spiegelei, dazu hausgemachte Rosmarin Wedges, Gemüse und BBQ Dip"
+        },
+        {
+                "name": "Winklarner Mostbraten",
+                "price": "17,50",
+                "desc": "mit Serviettenknödel und warmem Speckkrautsalat"
+        }
+]
     },
     {
         title: "Vegetarisch & Fisch",
         icon: Leaf,
         items: [
-            { name: "Bunte Woknudeln (leicht scharf)", price: "14,50", desc: "mit vegetarischem grünen Curry und Gemüse" },
-            { name: "Hausgemachte Dinkel – Gemüselaibchen", price: "14,50", desc: "auf Rahmschwammerl, dazu Reis und buntes Gemüse" },
-            { name: "Knusprige Vegane Quinoa-Gemüsefrühlingsrollen", price: "15,00", desc: "serviert mit Reis, buntem Gemüse und Chillidip" },
-            { name: "Graf´s Gemüseplatte", price: "15,50", desc: "mit hausgemachten Rosmarin Wedges, Spiegelei, gebackenen Champignons, Gemüselaibchen und Kräuterdip" },
-            { name: "Buntbarschfilets im Körndlmantel gebacken", price: "17,50", desc: "dazu Reis, buntes Gemüse und Sauce Tatare" },
-            { name: "Dazu ein Salatschüsserl vom Buffet", price: "4,00" },
-        ]
+        {
+                "name": "Hausgemachte Dinkel – Gemüselaibchen",
+                "price": "14,50",
+                "desc": "auf Rahmschwammerl, dazu Reis und buntes Gemüse"
+        },
+        {
+                "name": "Knusprige Vegane Quinoa-Gemüsefrühlingsrollen",
+                "price": "15,00",
+                "desc": "serviert mit Reis, buntem Gemüse und Chillidip"
+        },
+        {
+                "name": "Graf´s Gemüseplatte",
+                "price": "16,00",
+                "desc": "mit hausgemachten Rosmarin Wedges, Spiegelei, gebackenen Champignons, Gemüselaibchen und Kräuterdip"
+        },
+        {
+                "name": "Zarte Zanderfilets vom Grill",
+                "price": "20,50",
+                "desc": "dazu Petersilienkartoffeln, buntes Gemüse und Kräuterbutter"
+        },
+        {
+                "name": "Buntbarschfilets im Körndlmantel gebacken",
+                "price": "18,50",
+                "desc": "dazu Reis, buntes Gemüse und Sauce Tatare"
+        },
+        {
+                "name": "Dazu ein Salatschüsserl vom Buffet",
+                "price": "5,00",
+                "desc": ""
+        }
+]
     },
     {
         title: "Mehlspeisen",
         icon: Cake,
         items: [
-            { name: "Hausgemachtes Schokosoufflé", price: "8,00", desc: "mit Vanilleeis" },
-            { name: "Gebackene Topfentorte", price: "5,00", desc: "mit Vanillesauce, fein garniert" },
-            { name: "Dubai Tiramisu im Glas", price: "8,00", desc: "fruchtig garniert" },
-            { name: "Schoko – Waffelherzen am Stiel", price: "8,50", desc: "mit Mangosorbet" },
-            { name: "Lauwarme Mohn – Nusstorte", price: "5,00", desc: "mit Schokosauce" },
-            { name: "Eispalatschinke", price: "8,00", desc: "mit Schokosauce und Schlagobers" },
-            { name: "Eiskaffee", price: "7,00" },
-        ]
-    }
+        {
+                "name": "Hausgemachtes Schokosoufflé",
+                "price": "8,00",
+                "desc": "mit Vanilleeis und Schlagobers"
+        },
+        {
+                "name": "Gebackene Topfentorte",
+                "price": "5,50",
+                "desc": "mit Beerensauce"
+        },
+        {
+                "name": "Mostviertler Apfel – Birnenzigarre",
+                "price": "9,00",
+                "desc": "auf Eierlikör – Vanillesauce"
+        },
+        {
+                "name": "Lauwarme Mohn – Nusstorte mit Schokosauce",
+                "price": "5,50",
+                "desc": ""
+        },
+        {
+                "name": "Eispalatschinke",
+                "price": "8,00",
+                "desc": "mit Schokosauce und Schlagobers"
+        },
+        {
+                "name": "Mostpudding mit Schlagobers",
+                "price": "5,50",
+                "desc": ""
+        },
+        {
+                "name": "Der kleine süße Abschluss",
+                "price": "4,50",
+                "desc": "Eine Kugel Pistazieneis mit Körndlcracker"
+        },
+        {
+                "name": "„Frühling im Glas“ buntes Tiramisu mit Fruchtspiegel",
+                "price": "7,50",
+                "desc": ""
+        },
+        {
+                "name": "Frisch gebackene Bueno – Pancakes",
+                "price": "9,50",
+                "desc": "mit Haselnußeis , fein garniert"
+        }
+]
+    },
 ];

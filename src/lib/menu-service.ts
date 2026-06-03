@@ -1,4 +1,4 @@
-import { scrapeMenus, scrapeNews } from './scraper';
+import { scrapeMenus, scrapeNews, scrapeSpeisen } from './scraper';
 
 // export const getMenus = unstable_cache(
 //     async () => {
@@ -14,6 +14,10 @@ import { scrapeMenus, scrapeNews } from './scraper';
 
 export const getMenus = async () => {
     return await scrapeMenus();
+};
+
+export const getSpeisen = async () => {
+    return await scrapeSpeisen();
 };
 
 export const getNews = async () => {
